@@ -12,6 +12,7 @@
     <Description>A benchmarking tool to find the right hardware for your development environment. It contains a set of built in tests that will allow you to see how well your computer performs when doing common development tasks.</Description>
     <Copyright>Copyright (c) 2021 JohanD</Copyright>
     <PackageProjectUrl>https://www.devbenchmark.com/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Johand86/DevMark</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
