@@ -1,0 +1,4 @@
+﻿/.vs/DevMark
+/Source/*/bin
+/Source/*/obj
+/Source/DevMark/nupkg

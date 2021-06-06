@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DevMark": {
+      "commandName": "Project",
+      "commandLineArgs": "run Umbraco -w X:\\devmark5 "
+    }
+  }
+}

@@ -1,0 +1,48 @@
+﻿
+name: "Entity Framework Core"
+version: "5.0.5"
+description: "Benchmark how well your hardware performs when building Entity Framework Core v5.0.5"
+author: "EF Core is maintained by Microsoft and released under the Apache license. See https://github.com/dotnet/efcore for more info."
+
+dependencies:
+  - git: 
+      minVersion: "2.0"
+  - path:
+      requiredLength: 146
+  - dotnetFramework:
+      minVersion: "4.6.1" # Not sure if this is needed, but ef.csproj targets netcoreapp2.0;net461.
+  - dotnet: 
+      minVersion: "5.0"
+
+initializers:
+  - git:
+      name: "Clone repository"
+      repository: "https://github.com/dotnet/efcore.git"
+      branch: "v5.0.5"
+      clean: true
+  - shell:
+      name: "Restore environment"
+      cmd: ".\\eng\\common\\build.ps1 -restore -build -verbosity q -configuration Release -msbuildEngine dotnet"
+
+tests:
+  - name: "build"
+    category: "default"
+    description: "This test will measure how fast your machine can build the Entity Framework soure code. This includes the assemblies you normally reference when building applications using Entity Framework, as well as EF.exe some other tools and test projects. Mostly targeting the netstandard 2.1."
+    iterations: 3
+    warmupIterations: 1
+    benchmark:
+      - shell:
+          name: "BUILD"
+          cmd: ".\\eng\\common\\build.ps1 -rebuild -verbosity q -configuration Release -msbuildEngine dotnet"
+
+cleanup:
+  - process:
+      # The setup for EF core will spawn a lot of dotnet processes which becomes orphaned once a script task has completed.
+      # Since we're killing them during cleanup they will be reused by every run of the test, only delaying the warmup with about 50%.
+      # We could move this to test cleanup, but I'm considering it to be part of the setup / warmup phase for now.
+      killWorkDirChildren: true
+  - git: 
+      clean: true
+      # A couple of json files for the EFCore.Relational.Specification.Tests artifacts directory may hit the 260 char limit in windows.
+      # This will cause git clean to fail. Leaving these files should not be an issue, so we rather do that then constraint the max path lenght further.
+      allowLockedFiles: true

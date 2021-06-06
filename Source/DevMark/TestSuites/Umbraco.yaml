@@ -1,0 +1,62 @@
+﻿
+name: "Umbraco"
+version: "8.13.0"
+description: "Benchmark how well your hardware performs when building Umbraco CMS v8.13.0."
+author: "Umbraco is maintained by the company of the same name and released under the MIT license. See https://github.com/umbraco/Umbraco-CMS/ for more info."
+
+dependencies:
+  - git: 
+      minVersion: "2.0"
+  - path:
+      requiredLength: 130
+  - VisualStudio:
+      minVersion: "16.3"
+      maxVersion: "16.99"
+      components:
+        - "Microsoft.VisualStudio.Workload.NetWeb"
+        - "Microsoft.Net.Component.4.7.2.TargetingPack"
+        - "Microsoft.NetCore.Component.DevelopmentTools"
+        - "Microsoft.NetCore.Component.Runtime.3.1"
+        - "Microsoft.NetCore.Component.SDK"
+  - NodeJS:
+      minVersion: "10"
+      NPM:
+        minVersion: "6.4.1"
+
+initializers:
+  - git:
+      name: "Checkout code"
+      repository: "https://github.com/umbraco/Umbraco-CMS.git"
+      branch: "release-8.13.0"
+      recursive: true
+      clean: true
+  - write:
+      message: "This test may ask to unblock NodeJS from your firewall. You can simply ignore that."
+  - shell:
+      name: "Restore environment"
+      cmd: ".\\build\\build.ps1"
+
+tests:
+  - name: "build and package"
+    description: "This test will measure how fast your machine can build and package Umbraco. It'll run GULP tasks for Javascript and LESS in the UI, build dotnet framework assemblies, zip the release and create nuget packages."
+    category: "default"
+    iterations: 3
+    warmupIterations: 0 # Since restore builds we dont need any extra warmup.
+    benchmark:
+      - shell:
+          name: "BUILD"
+          cmd: ".\\build\\build.ps1 -local"
+
+cleanup:
+  - process:
+      killWorkDirChildren: true
+  - git: 
+      clean: true
+      # Umbraco loads 3 assemblies into the default AssemblyLoadContext,
+      # likely due to Assembly.Load being used somewhere in the build pipeline.
+      # This will prevents us from doing a git clean untill either Umbraco is changed
+      # to use the new AssemblyLoadContext or the following issue is resolved:
+      # https://github.com/dotnet/runtime/issues/45285
+      # Files can be removed as soon as the process terminates, and we're not removing our
+      # work folder anyway, so this shouldn't cause any issues.
+      allowLockedFiles: true

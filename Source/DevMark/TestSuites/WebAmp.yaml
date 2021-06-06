@@ -1,0 +1,60 @@
+﻿
+name: "WebAmp"
+version: "1.4.2"
+description: "Benchmark how well your hardware performs when building and testing WebAmp 1.4.2."
+author: "WebAmp is a reimplementation of the classic MP3 player, built using TypeScript. Released under the MIT license by Jordan Eldredge, https://github.com/captbaritone/webamp."
+
+dependencies:
+  - git: 
+      minVersion: "2.0"
+  - path:
+      requiredLength: 172
+  - NodeJS:
+      minVersion: "12.16"
+      nativeCppModules: true
+      # Native Python modules are required when pre-built binaries of sqlite3 is not available for the Node version thats installed.
+      nativePythonModules: true
+      NPM:
+        minVersion: "6.14"
+        globalModules:
+          - name: "yarn"
+            minVersion: "1.22.0"
+
+initializers:
+  - git:
+      name: "Clone repository"
+      repository: "https://github.com/captbaritone/webamp.git"
+      branch: "1.4.2"
+      clean: true
+  - shell:
+      name: "Restore environment"
+      cmd: "yarn --cwd packages/webamp install"
+
+tests:
+  - name: "build"
+    description: "This test will measure how fast your machine can build a WebAmp js library from soure code, using webpack and the babel-loader to build a single output bundle."
+    category: "default"
+    iterations: 3
+    warmupIterations: 1
+    benchmark:
+      - shell:
+          name: "BUILD"
+          cmd: "yarn --cwd packages/webamp run build-library"
+
+  - name: "test"
+    description: "This test will measure how fast your machine can run the unit tests using Jest and do some lint checks."
+    category: "default"
+    iterations: 3
+    warmupIterations: 1
+    benchmark:
+      - shell:
+          name: "TEST"
+          cmd: "yarn --cwd packages/webamp test"
+
+cleanup:
+  - git: 
+      clean: true
+      # terser-webpack-plugin has a node module with a SHA512 in its path, this leaves us with ~50 characters left
+      # to hit the famous 260 char limit in windows. When hitting that path git clean will fail. Leaving these files
+      # should not be an issue.
+      allowLockedFiles: true

@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Scripts\CommandFunctions.ps1" />
+    <None Remove="Scripts\DevMarkDependency.ps1" />
+    <None Remove="Scripts\DotnetDependency.ps1" />
+    <None Remove="Scripts\DotnetFrameworkDependency.ps1" />
+    <None Remove="Scripts\Git.ps1" />
+    <None Remove="Scripts\GitDependency.ps1" />
+    <None Remove="Scripts\NodeJSDependency.ps1" />
+    <None Remove="Scripts\NotImplementedSysInfo.ps1" />
+    <None Remove="Scripts\PathDependency.ps1" />
+    <None Remove="Scripts\ProcessCleanup.ps1" />
+    <None Remove="Scripts\ShellCommand.ps1" />
+    <None Remove="Scripts\VisualStudioDependency.ps1" />
+    <None Remove="Scripts\WindowsSysInfo.ps1" />
+    <None Remove="Scripts\Write.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\CommandFunctions.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\DotnetFramework.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\Dotnet.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\DevMark.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\Path.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\Git.ps1" />
+    <EmbeddedResource Include="Scripts\Write.ps1" />
+    <EmbeddedResource Include="Scripts\NotImplementedSysInfo.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\NodeJS.ps1" />
+    <EmbeddedResource Include="Scripts\ProcessCleanup.ps1" />
+    <EmbeddedResource Include="Scripts\Dependencies\VisualStudio.ps1" />
+    <EmbeddedResource Include="Scripts\WindowsSysInfo.ps1" />
+    <EmbeddedResource Include="Scripts\ShellCommand.ps1" />
+    <EmbeddedResource Include="Scripts\Git.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.3" />
+    <PackageReference Include="YamlDotNet" Version="11.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DevMark.Model\DevMark.Model.csproj" />
+  </ItemGroup>
+
+
+</Project>
