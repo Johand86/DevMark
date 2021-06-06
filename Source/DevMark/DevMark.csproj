@@ -7,6 +7,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>devmark</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseFile>content\LICENSE.txt</PackageLicenseFile>
     <Authors>JohanD</Authors>
     <Company />
     <Description>A benchmarking tool to find the right hardware for your development environment. It contains a set of built in tests that will allow you to see how well your computer performs when doing common development tasks.</Description>

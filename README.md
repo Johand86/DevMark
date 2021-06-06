@@ -22,6 +22,10 @@ DevMark run EfCore
 DevMark upload "DevMark_TestResult_*timestamp*.json" --api-key *secret*
 ```
 
+## Share your results
+
+At https://www.devbenchmark.com/ you can see all results for the built in tests that have been uploaded by other users.
+
 ## The goal of DevMark
 
 - Educate people on what hardware to use for what tasks. Will an older and slower CPU with more cores perform better than newer with less?
