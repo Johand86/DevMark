@@ -4,5 +4,6 @@
     {
         public string Name { get; set; }
         public bool? SpawnNewShell { get; set; }
+        public PlatformConfiguration? Platform { get; set; }
     }
 }

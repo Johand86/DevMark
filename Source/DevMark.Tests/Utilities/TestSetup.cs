@@ -1,5 +1,8 @@
-﻿using DevMark.Core.Engine;
+﻿using DevMark.Core.Container;
+using DevMark.Core.Engine;
+using DevMark.Core.Execution;
 using DevMark.Core.SystemInformation;
+using Docker.DotNet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -51,9 +54,13 @@ namespace DevMark.Tests
             services.AddSingleton(x => new Mock<WorkDirectoryProvider>(() => new WorkDirectoryProvider(x.GetService<Microsoft.Extensions.Logging.ILogger>())).Object);
             services.AddSingleton(x => new Mock<CommandFactory>(() => new CommandFactory(workDir)).Object);
             services.AddSingleton(x => new Mock<BenchmarkEngine>(() => new BenchmarkEngine(x.GetService<CommandFactory>(), x.GetService<BenchmarkEngineLogger>(), x.GetService<SysInfoProvider>())).Object);
-            services.AddSingleton(x => new Mock<SysInfoProvider>(() => new SysInfoProvider(x.GetService<CommandFactory>(), x.GetService<ILogger<SysInfoProvider>>())).Object);
+            services.AddSingleton(x => new Mock<SysInfoProvider>(() => new SysInfoProvider(x.GetService<CommandFactory>(), x.GetRequiredService<CommandLogger>(), false, x.GetService<ILogger<SysInfoProvider>>())).Object);
             services.AddSingleton<Microsoft.Extensions.Logging.ILogger>(x => x.GetService<ILogger<TestSetup>>());
             services.AddSingleton<BenchmarkEngineLogger>();
+            services.AddSingleton<CommandLogger>();
+
+            services.AddSingleton<DockerContainerProvider>();
+            services.AddSingleton(x => new DockerClientConfiguration().CreateClient());
         }
 
     }

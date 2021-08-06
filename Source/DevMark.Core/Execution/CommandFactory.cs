@@ -84,17 +84,24 @@ namespace DevMark
             throw new ArgumentException();
         }
 
-        public SysInfoCommand CreateSysInfo(string platform, CommandEngineConfiguration engineConfig)
+        public SysInfoCommand CreateSysInfo(string platform, bool isContainer, CommandEngineConfiguration engineConfig)
         {
             var sysInfo = new SysInfoCommand(); 
-            sysInfo.Initialize(platform, engineConfig.TraceLogging);
+            sysInfo.Initialize(platform, isContainer, engineConfig.TraceLogging);
             return sysInfo; 
+        }
+
+        public DockerInfoCommand CreateDockerInfoCommand(CommandEngineConfiguration engineConfig)
+        {
+            var dockerInfo = new DockerInfoCommand();
+            dockerInfo.Initialize(engineConfig.TraceLogging);
+            return dockerInfo;
         }
 
         private string GenerateWorkDirectory(TestSuiteConfiguration testSuit)
         {
             string name = $"{testSuit.Name}-{testSuit.Version}"; 
-            Regex filterExpression = new Regex("[^a-zA-Z0-9 -]");
+            Regex filterExpression = new Regex("[^a-zA-Z0-9-]");
             string subDir = filterExpression.Replace(name, "");
             string testDir = Path.Combine(_baseWorkDir, subDir);
             return testDir;

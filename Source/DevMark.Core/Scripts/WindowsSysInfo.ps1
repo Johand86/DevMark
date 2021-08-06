@@ -97,6 +97,7 @@ $sysInfo.OS = new-object DevMark.Model.SystemInformation.OsInfo
 $sysInfo.OS.Version =$info.WindowsVersion
 $sysInfo.OS.Name = $info.WindowsProductName
 $sysInfo.OS.Architecture = $info.OsArchitecture
+$sysInfo.OS.Platform = "Windows"
 
 $sysInfo.PowerSupply =  new-object DevMark.Model.SystemInformation.PowerSupplyInfo
 if ($batteryInfo -ne $null -and $batteryInfo.BatteryStatus -eq 1) {

@@ -1,6 +1,6 @@
 ﻿namespace DevMark
 {
-    public class ProcessCleanupCommandConfiguration
+    public class ProcessCleanupCommandConfiguration : BaseCommandConfiguration
     {
         public bool? KillWorkDirChildren { get; set; }
     }

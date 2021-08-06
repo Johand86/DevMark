@@ -4,6 +4,15 @@ version: "8.13.0"
 description: "Benchmark how well your hardware performs when building Umbraco CMS v8.13.0."
 author: "Umbraco is maintained by the company of the same name and released under the MIT license. See https://github.com/umbraco/Umbraco-CMS/ for more info."
 
+environment:
+  - host:
+      platform: Windows
+      supported: true
+  - container:
+      platform: Windows
+      image:
+        dockerfile: DevMarkWin.Dockerfile
+
 dependencies:
   - git: 
       minVersion: "2.0"
@@ -12,12 +21,18 @@ dependencies:
   - VisualStudio:
       minVersion: "16.3"
       maxVersion: "16.99"
-      components:
-        - "Microsoft.VisualStudio.Workload.NetWeb"
-        - "Microsoft.Net.Component.4.7.2.TargetingPack"
-        - "Microsoft.NetCore.Component.DevelopmentTools"
-        - "Microsoft.NetCore.Component.Runtime.3.1"
-        - "Microsoft.NetCore.Component.SDK"
+      componentSets:
+        - components:
+          - "Microsoft.VisualStudio.Workload.NetWeb"
+          - "Microsoft.Net.Component.4.7.2.TargetingPack"
+          - "Microsoft.NetCore.Component.DevelopmentTools"
+          - "Microsoft.NetCore.Component.Runtime.3.1"
+          - "Microsoft.NetCore.Component.SDK"
+        - components:
+          - "Microsoft.VisualStudio.Workload.WebBuildTools"
+          - "Microsoft.Net.Component.4.7.2.TargetingPack"
+          - "Microsoft.NetCore.Component.Runtime.3.1"
+          - "Microsoft.NetCore.Component.SDK"
   - NodeJS:
       minVersion: "10"
       NPM:

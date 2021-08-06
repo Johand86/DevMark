@@ -1,6 +1,7 @@
 ﻿using DevMark.Core.Engine;
 using DevMark.Core.TestResult;
 using DevMark.Model;
+using DevMark.Model.SystemInformation;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,7 @@ namespace DevMark
                 failed += results.Items.Where(x => !x.Command.Successfull).Count();
             }
 
-            _logger.LogInformation($"Check dependencies completed, {success}/{success+failed} dependency checks were successful.");
+            _logger.LogInformation($"Check dependencies completed, {success}/{success + failed} dependency checks were successful.");
             if (failed != 0)
             {
                 _logger.LogInformation("In order to run all tests, you'll have to install the dependencies mentioned above.");
@@ -52,10 +53,7 @@ namespace DevMark
 
         public (TestRun testRun, string resultPath) RunSuites(string[] testSuites, string[] categories, string resultPath)
         {
-            var testRun = new TestRun();
-            testRun.Version = GetVersion();
-            testRun.Timestamp = DateTime.UtcNow;
-            testRun.Id = Guid.NewGuid();
+            TestRun testRun = CreateTestRun();
 
             var resultTestSuites = new List<TestSuite>();
             testRun.TestSuites = resultTestSuites;
@@ -75,14 +73,56 @@ namespace DevMark
                 }
             }
 
-            var sysInfo = _engine.GetSysInfo();
-            testRun.SysInfo = sysInfo;
-            testRun.Verification.SysInfo = _hashCalculator.Calculate(sysInfo);
+            UpdateSysInfo(testRun);
 
-            string actualResultPath = _fileProvider.Save(testRun, resultPath);
-            _logger.LogInformation($"Test result written to \"{actualResultPath}\".");
+            string actualResultPath = Write(resultPath, testRun);
 
             return (testRun, actualResultPath);
+        }
+
+        public TestRun CreateTestRun()
+        {
+            var testRun = new TestRun();
+            testRun.Version = GetVersion();
+            testRun.Timestamp = DateTime.UtcNow;
+            testRun.Id = Guid.NewGuid();
+            return testRun;
+        }
+
+        public void Merge(TestRun source, TestRun target)
+        {
+            var containers = source.SysInfo.Containers ?? new List<ContainerInfo>();
+            target.SysInfo.Containers.AddRange(containers);
+
+            var testSuites = source.TestSuites ?? new List<TestSuite>();
+            target.TestSuites.AddRange(testSuites);
+
+            var verification = source.Verification.TestSuites ?? new List<string>();
+            target.Verification.TestSuites.AddRange(verification);
+        }
+
+        public string Write(string resultInputPath, TestRun testRun, bool writeLog = true)
+        {
+            string actualResultPath = _fileProvider.Save(testRun, resultInputPath);
+            if (writeLog)
+                _logger.LogInformation($"Test result written to \"{actualResultPath}\".");
+            return actualResultPath;
+        }
+
+        public void UpdateSysInfo(TestRun testRun)
+        {
+            var sysInfo = _engine.GetSysInfo();
+
+            if (sysInfo.Containers.Count != 0)
+            {
+                sysInfo.Containers.Last().ConfigIdentifier = testRun.TestSuites.LastOrDefault()?.ConfigIdentifier;
+            }
+
+            var currentContainerInfo = testRun.SysInfo?.Containers ?? new List<ContainerInfo>();
+            sysInfo.Containers.AddRange(currentContainerInfo);
+
+            testRun.SysInfo = sysInfo;
+            testRun.Verification.SysInfo = _hashCalculator.Calculate(sysInfo);
         }
 
         public TestRun Load(string resultPath)

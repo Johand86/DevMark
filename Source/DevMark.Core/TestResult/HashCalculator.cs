@@ -33,9 +33,14 @@ namespace DevMark.Core.TestResult
             _logger = logger;
         }
     
-        public string Calculate(SysInfo sysInfo)
+        public string Calculate(SysInfo sysInfo, bool excludeContainers = false)
         {
-            return ComputeHash(sysInfo);
+            var clone = JsonClone(sysInfo);
+            if (excludeContainers)
+            {
+                clone.Containers = new List<ContainerInfo>();
+            }
+            return ComputeHash(clone);
         }
 
         public bool Verify(TestRun testRun)
@@ -122,7 +127,7 @@ namespace DevMark.Core.TestResult
             return ComputeHash(testSuiteClone);
         }
 
-        private T JsonClone<T>(T resultTestSuite)
+        public T JsonClone<T>(T resultTestSuite)
         {
             return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(resultTestSuite));
         }

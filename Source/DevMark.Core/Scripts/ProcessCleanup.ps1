@@ -31,7 +31,7 @@ if ($killWorkDirChildren) {
 			}
 		}
 		
-		Write "Killed $count processes running from work directory `"$workDir`"."
+		Write-Information "Killed $count processes running from work directory `"$workDir`"."
 	}
 
 
@@ -41,8 +41,8 @@ if ($killWorkDirChildren) {
 	
 		$remainingProcesses = 0
 		foreach ($process in $spawnedProcesses) {
-			if (!$process.HasExited) {
-				Write-Warning "Process still running: $process"
+			$refreshedProcess = Get-Process -PID $process.Id -ErrorAction SilentlyContinue
+			if ($refreshedProcess -ne $null -and !$refreshedProcess.HasExited) {
 				$remainingProcesses++
 			}
 		}
@@ -52,7 +52,7 @@ if ($killWorkDirChildren) {
 		}
 
 		if ([DateTime]::Now -gt $timeout) {
-			Write-Warning "Not all processes could be terminated within the time limit."
+			Write-Warning "Not all processes could be terminated within the time limit. $remainingProcesses remaining."
 			break
 		}
 

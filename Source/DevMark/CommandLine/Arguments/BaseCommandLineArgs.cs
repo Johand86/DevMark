@@ -7,5 +7,7 @@
         public string Log { get; set; }
         public bool All { get; set; }
         public bool Help { get; set; }
+        public bool DockerTarget { get; set; }
+        public bool DockerWait { get; set; }
     }
 }

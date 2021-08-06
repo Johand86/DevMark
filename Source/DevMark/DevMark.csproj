@@ -14,12 +14,41 @@
     <Copyright>Copyright (c) 2021 JohanD</Copyright>
     <PackageProjectUrl>https://www.devbenchmark.com/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Johand86/DevMark</RepositoryUrl>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.0</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Containers\Dockerfile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\DevMarkWin.Dockerfile" Link="Containers\DevMarkWin.Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\DevMarkLinux.Dockerfile" Link="Containers\DevMarkLinux.Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\DevMarkWinDevelopment.Dockerfile" Link="Containers\DevMarkWinDevelopment.Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>None</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\..\DevMarkLinuxDevelopment.Dockerfile" Link="Containers\DevMarkLinuxDevelopment.Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>None</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\..\LICENSE.txt" Link="LICENSE.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
   </ItemGroup>
 
 
@@ -59,6 +88,10 @@
     <None Update="TestSuites\EfCore.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Containers\" />
   </ItemGroup>
 
 </Project>

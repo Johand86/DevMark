@@ -11,6 +11,7 @@ namespace DevMark.Model.SystemInformation
             GPUs = new List<GpuInfo>();
             RAM = new List<RamInfo>();
             Disks = new List<DiskInfo>();
+            Containers = new List<ContainerInfo>();
         }
 
         [JsonProperty("CPUs")]
@@ -30,5 +31,7 @@ namespace DevMark.Model.SystemInformation
         public OsInfo OS { get; set; }
 
         public PowerSupplyInfo PowerSupply { get; set; }
+
+        public List<ContainerInfo> Containers { get; set; }
     }
 }

@@ -2,7 +2,11 @@
   "profiles": {
     "DevMark": {
       "commandName": "Project",
-      "commandLineArgs": "run Umbraco -w X:\\devmark5 "
+      "commandLineArgs": "run Echo --docker --dockerfile DevMarkLinuxDevelopment.Dockerfile --docker-dev-container --docker-dev-source-path \"C:\\Johan\\Repos\\DevMark\" -w X:\\DM2 --docker-wait"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "commandLineArgs": "check Echo"
     }
   }
 }

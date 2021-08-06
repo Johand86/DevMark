@@ -1,4 +1,4 @@
-﻿Param([Parameter(Mandatory=$true)][string]$workDir, [string]$minVersion, [string]$maxVersion, $requiredComponents = $null, [boolean]$trace = $false, [boolean]$printInstallInstructions = $true)
+﻿Param([Parameter(Mandatory=$true)][string]$workDir, [string]$minVersion, [string]$maxVersion, $requiredComponentSets = $null, [boolean]$trace = $false, [boolean]$printInstallInstructions = $true)
 
 ##<CommandFunctions.ps1>##
 $global:LASTEXITCODE = 0
@@ -13,7 +13,7 @@ if (!(Test-Path -Path $vsWherePath -PathType Leaf)) {
 }
 
 if (!(Test-Path -Path $vsWherePath -PathType Leaf)) {
-	Write "vswhere not found, downloading..."
+	echo "vswhere not found, downloading..."
 	Invoke-WebRequest -Uri "https://github.com/microsoft/vswhere/releases/download/2.8.4/vswhere.exe" -OutFile $vsWherePath
 }
 
@@ -24,78 +24,104 @@ function TryWriteWarning ($message) {
 	}
 }
 
-$requireParam = ""
-if ($requiredComponents -ne $null) {
-		$requireParam = "-requires"
-	foreach ($component in $requiredComponents) {
-		$requireParam += " $component"
-	}
+if ($requiredComponentSets -eq $null -or $requiredComponentSets.length -eq 0) {
+	$requiredComponentSets = @($null)
 }
 
-$versionParam = ""
-$ver = ""
-if ($minVersion -or $maxVersion) {
+foreach ($componentSet in $requiredComponentSets) {
+
+	$requireParam = ""
+	if ($componentSet -ne $null) {
+			$requireParam = "-requires"
+		foreach ($component in $componentSet.Components) {
+			$requireParam += " $component"
+		}
+	}
+
+	$versionParam = ""
+	$ver = ""
+	if ($minVersion -or $maxVersion) {
 	
-	if ($minVersion -and $maxVersion) {
-		$ver = "[$minVersion,$maxVersion]"
+		if ($minVersion -and $maxVersion) {
+			$ver = "[$minVersion,$maxVersion]"
+		}
+		elseif ($minVersion) {
+			$ver = "[$minVersion"
+		}
+		elseif ($maxVersion) {
+			$ver = "$maxVersion]"
+		}
+
+		$versionParam = "-version `"$ver`""
 	}
-	elseif ($minVersion) {
-		$ver = "[$minVersion"
+	# Component ID list: https://docs.microsoft.com/en-us/visualstudio/install/workload-and-component-ids?view=vs-2019
+
+	# Run command
+
+	$msBuildExpr = "& `"$vsWherePath`" $versionParam $requireParam -products * -Find MsBuild\**\bin\msbuild.exe"
+	$vsPathExpr = "& `"$vsWherePath`" $versionParam $requireParam -products * -property installationPath"
+	$vsVersionExpr = "& `"$vsWherePath`" $versionParam $requireParam -products * -property installationVersion"
+
+	if ($trace) {
+		Write-Host $msBuildExpr
 	}
-	elseif ($maxVersion) {
-		$ver = "$maxVersion]"
+
+	$msBuild = InvokeExpression $msBuildExpr -PrintInfoOutput:$trace -PrintErrorOutput:$true
+	$msBuildFound = $LASTEXITCODE -eq 0 -and $msBuild -ne $null -and (Test-Path -Path $msBuild -PathType Leaf)
+
+	if ($trace) {
+		Write-Host $vsPathExpr
 	}
 
-	$versionParam = "-version `"$ver`""
+	$vsPath = InvokeExpression $vsPathExpr -PrintInfoOutput:$trace -PrintErrorOutput:$true
+	$vsFound = $LASTEXITCODE -eq 0 -and $vsPath -ne $null -and (Test-Path -Path $vsPath)
+
+	$vsVersion = InvokeExpression $vsVersionExpr -PrintInfoOutput:$trace -PrintErrorOutput:$true
+
+	$vsTest = "$vsPath\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+	$vsTestFound = $vsFound -and (Test-Path -Path $vsTest -PathType Leaf)
+
+	#VC: https://github.com/microsoft/vswhere/wiki/Find-VC
+
+	if ($vsFound) {
+		break
+	}
 }
-# Component ID list: https://docs.microsoft.com/en-us/visualstudio/install/workload-and-component-ids?view=vs-2019
-
-# Run command
-
-$msBuildExpr = "& `"$vsWherePath`" $versionParam $requireParam -products * -Find MsBuild\**\bin\msbuild.exe"
-$vsPathExpr = "& `"$vsWherePath`" $versionParam $requireParam -products * -property installationPath"
-$vsVersionExpr = "& `"$vsWherePath`" $versionParam $requireParam -products * -property installationVersion"
-
-if ($trace) {
-	Write-Host $msBuildExpr
-}
-
-$msBuild = InvokeExpression $msBuildExpr -PrintInfoOutput:$trace -PrintErrorOutput:$true
-$msBuildFound = $LASTEXITCODE -eq 0 -and $msBuild -ne $null -and (Test-Path -Path $msBuild -PathType Leaf)
-
-if ($trace) {
-	Write-Host $vsPathExpr
-}
-
-$vsPath = InvokeExpression $vsPathExpr -PrintInfoOutput:$trace -PrintErrorOutput:$true
-$vsFound = $LASTEXITCODE -eq 0 -and $vsPath -ne $null -and (Test-Path -Path $vsPath)
-
-$vsVersion = InvokeExpression $vsVersionExpr -PrintInfoOutput:$trace -PrintErrorOutput:$true
-
-$vsTest = "$vsPath\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
-$vsTestFound = $vsFound -and (Test-Path -Path $vsTest -PathType Leaf)
-
-#VC: https://github.com/microsoft/vswhere/wiki/Find-VC
 
 if (!$vsFound) {
 
-	$componentInstallString = ""
 	$versionString = ""
 	if ($ver) {
 		$versionString = " `"$ver`""
 	}
 	TryWriteWarning "Visual Studio$versionString with the required components could not be found."
 	TryWriteWarning ""
-	if ($requiredComponents) {
+
+	
+	$componentInstallString = ""
+	if ($requiredComponentSets) {
 		TryWriteWarning "Make sure the following components are installed:"
-		foreach ($component in $requiredComponents) {
-			TryWriteWarning "- $component"
-			if ($component.Contains(".Workload.")) {
-				$componentInstallString += "--add $component;includeRecommended "
+
+		$firstSet = $true
+		foreach ($componentSet in $requiredComponentSets) { 
+
+			if (!$firstSet) {
+				TryWriteWarning ""
+				TryWriteWarning "Or (depending on VS edition):"
 			}
-			else {
-				$componentInstallString += "--add $component "
+
+			foreach ($component in $componentSet.Components) {
+				TryWriteWarning "- $component"
+				if ($firstSet) {
+					if ($component.Contains(".Workload.")) {
+						$componentInstallString += "--add $component;includeRecommended "
+					}
+					else {
+						$componentInstallString += "--add $component "
+					}
+				}
 			}
+			$firstSet = $false
 		}
 		
 		TryWriteWarning ""

@@ -25,7 +25,7 @@ namespace DevMark.Tests
                 {
                     var sysInfoProvider = serviceProvider.GetService<SysInfoProvider>();
                     var platform = sysInfoProvider.GetOsPlatform();
-                    var sysInfo = sysInfoProvider.ExecuteSysInfoCommand(platform);
+                    var sysInfo = sysInfoProvider.ExecuteSysInfoCommand(platform, false);
 
                     Assert.IsTrue(sysInfo.Successfull);
                     Assert.AreEqual(0, sysInfo.ExitCode);

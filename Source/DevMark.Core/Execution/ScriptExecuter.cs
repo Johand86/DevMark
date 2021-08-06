@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Runtime.InteropServices;
 
 namespace DevMark
 {
@@ -30,7 +31,10 @@ namespace DevMark
             }
 
             var defaultSessionState = InitialSessionState.CreateDefault();
-            defaultSessionState.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.RemoteSigned;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                defaultSessionState.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.RemoteSigned;
+            }
 
             if (loadModules != null)
             {

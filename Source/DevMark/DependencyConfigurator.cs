@@ -1,8 +1,12 @@
 ﻿using DevMark.CommandLine;
+using DevMark.Core;
+using DevMark.Core.Container;
 using DevMark.Core.Engine;
+using DevMark.Core.Execution;
 using DevMark.Core.SysIdle;
 using DevMark.Core.SystemInformation;
 using DevMark.Core.TestResult;
+using Docker.DotNet;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +19,7 @@ using Serilog;
 using System.CommandLine;
 using System.CommandLine.IO;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace DevMark
 {
@@ -35,8 +40,7 @@ namespace DevMark
             },
         };
 
-
-        public ServiceProvider BuildServiceProvider(string workDirectory, bool verboseLogging, bool diagnostics, string apiToken, string customServiceUrl)
+        public ServiceProvider BuildServiceProvider(string workDirectory, bool verboseLogging, bool diagnostics, string apiToken, string customServiceUrl, bool runningInContainer, bool devContainer, string devSourcePath, bool skipContainerBuild)
         {
             var services = new ServiceCollection();
 
@@ -73,26 +77,52 @@ namespace DevMark
             services.AddTransient(x => new CommandFactory(workDirectory));
             services.AddTransient<BenchmarkEngine>(x => new BenchmarkEngine(x.GetRequiredService<CommandFactory>(), x.GetRequiredService<BenchmarkEngineLogger>(), x.GetRequiredService<SysInfoProvider>()) { TraceLogging = verboseLogging, WorkDir = workDirectory });
             services.AddTransient<BenchmarkEngineLogger>();
+            services.AddTransient<CommandLogger>();
             services.AddTransient<TestSuiteFileProvider>();
             services.AddTransient<TestSuiteConfigurationProvider>();
             services.AddTransient<CommandLinePrinter>();
             services.AddTransient<TestResultCompilationProvider>();
-            services.AddTransient<SysInfoProvider>();
+            services.AddTransient<SysInfoProvider>(x => new SysInfoProvider(x.GetRequiredService<CommandFactory>(), x.GetRequiredService<CommandLogger>(), runningInContainer, x.GetRequiredService<ILogger<SysInfoProvider>>()));
             services.AddTransient<TestResultFileProvider>(x => new TestResultFileProvider(x.GetRequiredService<ILogger<TestResultFileProvider>>(), DefaultSerializationSettings));
             services.AddTransient<TestResultUploadProvider>(x => new TestResultUploadProvider(x.GetRequiredService<ILogger<TestResultUploadProvider>>(), DefaultSerializationSettings, customServiceUrl ?? DefaultServiceUrl, apiToken));
             services.AddTransient<HashCalculator>();
             services.AddTransient<IConsole>((x) => new SystemConsole());
             services.AddTransient<TestRunner>();
             services.AddTransient<IDiagnosticProvider>(x => diagnostics ? new AIDiagnosticProvider(x.GetService<ILogger<AIDiagnosticProvider>>(), x.GetService<TelemetryClient>(), diagnostics) : new NopDiagnosticProvider());
-            services.AddTransient<ISystemIdlePreventionProvider>(x => new WinSystemIdlePreventionProvider());
+            services.AddTransient<DockerContainerProvider>();
+            services.AddTransient<DockerTestRunner>();
+            services.AddSingleton(x => new DockerClientConfiguration().CreateClient());
+            services.AddTransient(x => new ContainerEngine(x.GetRequiredService<DockerContainerProvider>(), x.GetRequiredService<IDockerfileFileProvider>(), x.GetRequiredService<CommandFactory>(), x.GetRequiredService<CommandLogger>(), x.GetRequiredService<ILogger<ContainerEngine>>(), workDirectory, skipContainerBuild) { TraceLogging = verboseLogging });
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                services.AddTransient<ISystemIdlePreventionProvider>(x => new WinSystemIdlePreventionProvider());
+            }
+            else
+            {
+                services.AddTransient<ISystemIdlePreventionProvider>(x => new NopSystemIdlePreventionProvider());
+            }
+
+            if (devContainer)
+            {
+                services.AddTransient<IDockerfileFileProvider>(x => new DevDockerfileFileProvider(devSourcePath));
+            }
+            else
+            {
+                services.AddTransient<IDockerfileFileProvider>(x => new DockerfileFileProvider());
+            }
 
             return services.BuildServiceProvider();
-
         }
 
-        public void SetupLogging(string logFile, bool verbose)
+        public void SetupLogging(string logFile, bool verbose, bool runningInContainer)
         {
-            var log = new LoggerConfiguration().WriteTo.Console();
+            var log = new LoggerConfiguration();
+            
+            if (runningInContainer)
+                log = log.WriteTo.Console(outputTemplate: "{Message:lj}{NewLine}{Exception}", standardErrorFromLevel: Serilog.Events.LogEventLevel.Error);
+            else
+                log = log.WriteTo.Console();
 
             if (!string.IsNullOrEmpty(logFile))
             {

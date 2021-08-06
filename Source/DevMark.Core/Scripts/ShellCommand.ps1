@@ -11,4 +11,4 @@ $timer = New-Object System.Diagnostics.StopWatch
 $startTime = [DateTime]::UtcNow
 $output = InvokeExpression $cmd -PrintInfoOutput:$trace -PrintErrorOutput:$true -timer $timer
 
-return @{ ExitCode = $LASTEXITCODE; Duration = $timer.ElapsedTicks; Timestamp = $startTime }
+return @{ ExitCode = $LASTEXITCODE; Duration = $timer.ElapsedMilliseconds; Timestamp = $startTime }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DevMark
@@ -14,34 +15,57 @@ namespace DevMark
 
         public string[] ResolveTestSuites(string testSuite, bool all)
         {
-            if (testSuite != null && Directory.Exists(testSuite))
-            {
-                return Directory.GetFiles(testSuite, "*.yaml");
-            }
 
             var testSuiteDefaultPath = GetDefaultPath();
-
-            if (testSuite != null)
-            {
-                if (File.Exists(testSuite))
-                {
-                    return new string[] { testSuite };
-                }
-                else if (testSuite.ToLower().EndsWith(".yaml") != true)
-                {
-                    string suitePath = Path.Combine(testSuiteDefaultPath, $"{testSuite}.yaml");
-                    if (File.Exists(suitePath))
-                        return new string[] { suitePath };
-                }
-            }
-
             if (all)
             {
                 return Directory.GetFiles(testSuiteDefaultPath, "*.yaml");
             }
 
+            if (testSuite != null && Directory.Exists(testSuite))
+            {
+                return Directory.GetFiles(testSuite, "*.yaml");
+            }
+
+
+            if (testSuite != null)
+            {
+                if (!testSuite.Contains(";"))
+                {
+                    return ResolveTestSuites(testSuiteDefaultPath, testSuite);
+                }
+                else
+                {
+                    var suitePaths = testSuite.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    List<string> testSuiteCollection = new List<string>();
+                    foreach (var suitePath in suitePaths)
+                    {
+                        testSuiteCollection.AddRange(ResolveTestSuites(testSuiteDefaultPath, suitePath));
+                    }
+                    return testSuiteCollection.ToArray();
+                }
+               
+            }
+
             return new string[0];
         }
+
+        private string[] ResolveTestSuites(string testSuiteDefaultPath, string testSuite)
+        {
+            if (File.Exists(testSuite))
+            {
+                return new string[] { testSuite };
+            }
+            else if (testSuite.ToLower().EndsWith(".yaml") != true)
+            {
+                string suitePath = Path.Combine(testSuiteDefaultPath, $"{testSuite}.yaml");
+                if (File.Exists(suitePath))
+                    return new string[] { suitePath };
+            }
+
+            return new string[0];
+        }
+
 
         public IEnumerable<string> ListTestSuits(string testSuitesDefaultPath)
         {

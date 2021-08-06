@@ -4,6 +4,20 @@ version: "1.0"
 description: "Dummy benchmark for quick testing."
 author: ""
 
+environment:
+  - host:
+      platform: Windows
+      supported: true
+  - container:
+      platform: Windows
+      minVersion: 20
+      image:
+        dockerfile: DevMarkWin.Dockerfile
+  - container:
+      platform: Linux
+      image:
+        dockerfile: DevMarkLinux.Dockerfile
+
 dependencies:
   - DevMark:
       minVersion: "1.0"
@@ -15,24 +29,19 @@ dependencies:
         - name: Microsoft.NETCore.App
           minVersion: "5.0"
   - NodeJS:
-      minVersion: "12"
+      minVersion: "10"
       NPM:
-        minVersion: "6"
+        minVersion: "4"
         globalModules:
           - name: "yarn"
             minVersion: "1.22.0"
   - git: 
       minVersion: "2.0"
-  - VisualStudio:
-      minVersion: "16"
-      components:
-        - "Microsoft.VisualStudio.Workload.NetWeb"
-
 
 initializers:
   - shell:
       name: "Restore environment"
-      cmd: "Write 'Restore'"
+      cmd: "echo 'Restore'"
   - write:
       message: "Sample message!"
 
@@ -44,15 +53,15 @@ tests:
     initializers:
       - shell:
           name: "Restore environment (before test)"
-          cmd: "Write 'Test restore!'"
+          cmd: "echo 'Test restore!'"
     benchmark:
       - shell:
           name: "Rebuilding solution"
-          cmd: "Write \"Look at the env variable: $MsBuild\""
+          cmd: "echo \"Look at the env variable: $MsBuild\""
     cleanup:
       - shell:
           name: "Cleanup environment (after test)"
-          cmd: "Write 'Test cleanup!'"
+          cmd: "echo 'Test cleanup!'"
   - name: "other"
     category: "extended"
     iterations: 3
@@ -60,9 +69,9 @@ tests:
     benchmark:
       - shell:
           name: "Test in extended category"
-          cmd: "Write \"This test doesnt allways run!\""
+          cmd: "echo \"This test doesnt allways run!\""
 
 cleanup:
   - shell:
       name: "Test suite cleanup"
-      cmd: "Write 'Suite cleanup!'"
+      cmd: "echo 'Suite cleanup!'"

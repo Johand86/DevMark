@@ -1,34 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DevMark.Core.Execution;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Text.Json;
 
 namespace DevMark.Core.Engine
 {
-    public class BenchmarkEngineLogger
+    public class BenchmarkEngineLogger : CommandLogger
     {
-        private readonly ILogger<BenchmarkEngine> _logger;
 
-        public BenchmarkEngineLogger(ILogger<BenchmarkEngine> logger)
+        public BenchmarkEngineLogger(ILogger<CommandLogger> logger) :base(logger)
         {
-            _logger = logger;
         }
 
-        public void LogOutputStreamObject(StreamObject streamObj)
-        {
-            switch (streamObj.Severity)
-            {
-                case StreamSeverty.Info:
-                    _logger.LogInformation(streamObj.Message?.ToString());
-                    break;
-                case StreamSeverty.Warn:
-                    _logger.LogWarning(streamObj.Message?.ToString());
-                    break;
-                case StreamSeverty.Error:
-                    _logger.LogError(streamObj.Message?.ToString());
-                    break;
-            }
-        }
 
         public string GetCommandScopeDiplayName(BenchmarkScope scope)
         {

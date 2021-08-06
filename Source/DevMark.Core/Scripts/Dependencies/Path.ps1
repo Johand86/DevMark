@@ -30,9 +30,23 @@ if ($winRemainingPathChars -lt $requiredLength) {
 }
 
 $localDiskFound = $false
-$diskDriveLetters = Get-Partition | Select-Object -ExpandProperty DriveLetter
-foreach ($driveLetter in $diskDriveLetters) {
-	if ($workDir.ToLower().StartsWith("$($driveLetter):".ToLower())) {
+
+$hasPartitionCommand = get-command get-partition -ErrorAction SilentlyContinue
+if ($hasPartitionCommand) {
+	$partitions = Get-Partition
+	$diskDriveLetters = $partitions | Select-Object -ExpandProperty DriveLetter
+	foreach ($driveLetter in $diskDriveLetters) {
+		if ($workDir.ToLower().StartsWith("$($driveLetter):".ToLower())) {
+			$localDiskFound = $true
+		}
+	}
+}
+
+if (!$localDiskFound) {
+	if (!$partitions) {
+		# We're probably running in a VM/Docker container or Unix environment.
+		# We could check this with (get-computerinfo).CsModel -eq "Virtual Machine" for HyperV/Docker on Windows,
+		# but for new we just accept it.
 		$localDiskFound = $true
 	}
 }

@@ -3,6 +3,7 @@ using DevMark.Core.SysIdle;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DevMark.CommandLine
@@ -20,12 +21,11 @@ namespace DevMark.CommandLine
                     return CommandLineResult.Help;
                 }
 
-                serviceProvider = CommandSetup.ServiceProvider(args, args.WorkDir, apiToken: args.ApiKey);
+                serviceProvider = CommandSetup.ServiceProvider(args, args.WorkDir, apiToken: args.ApiKey, runningInContainer: args.DockerTarget);
 
                 diagnosticsProvider = serviceProvider.GetService<IDiagnosticProvider>();
-
-                var testSuiteFileProvider = serviceProvider.GetService<TestSuiteFileProvider>();
                 var cmdPrinter = serviceProvider.GetRequiredService<CommandLinePrinter>();
+                var testSuiteFileProvider = serviceProvider.GetService<TestSuiteFileProvider>();
                 string[] testSuites = testSuiteFileProvider.ResolveTestSuites(args.Test, args.All);
 
                 string[] categories = (args.Categories ?? "default").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
@@ -40,22 +40,26 @@ namespace DevMark.CommandLine
 
                             var (testRun, resultPath) = testRunner.RunSuites(testSuites, categories, args.Result);
 
-                            cmdPrinter.PrintTestResults(testRun);
-
-                            if (!string.IsNullOrEmpty(args.ApiKey))
+                            if (!args.DockerTarget)
                             {
-                                if (!testRunner.Verify(testRun))
+
+                                cmdPrinter.PrintTestResults(testRun);
+
+                                if (!string.IsNullOrEmpty(args.ApiKey))
                                 {
-                                    return new CommandLineResult(false, "Failed to verify the integrity of the file.");
-                                }
+                                    if (!testRunner.Verify(testRun))
+                                    {
+                                        return new CommandLineResult(false, "Failed to verify the integrity of the file.");
+                                    }
 
-                                var uploadResult = await testRunner.Upload(testRun);
-                                cmdPrinter.PrintUploadResult(uploadResult);
-                            }
-                            else
-                            {
-                                if (testRun.TestSuites.Any())
-                                    cmdPrinter.PrintUploadSuggestion(resultPath);
+                                    var uploadResult = await testRunner.Upload(testRun);
+                                    cmdPrinter.PrintUploadResult(uploadResult);
+                                }
+                                else
+                                {
+                                    if (testRun.TestSuites.Any())
+                                        cmdPrinter.PrintUploadSuggestion(resultPath);
+                                }
                             }
 
                             return CommandLineResult.Success;

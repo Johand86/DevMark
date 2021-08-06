@@ -46,9 +46,9 @@ namespace DevMark
                 return true;
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                _logger.LogInformation($"Failed to use \"{workDirectory}\" for temporary storage.");
+                _logger.LogInformation($"Failed to use \"{workDirectory}\" for temporary storage ({e.Message}).");
                 if (throwOnError)
                     throw;
 

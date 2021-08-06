@@ -8,5 +8,12 @@
         public string WorkDir { get; set; }
         public string Result { get; set; }
         public string ApiKey { get; set; }
+
+        public bool Docker { get; set; }
+        public string Dockerfile { get; set; }
+
+        public bool DockerSkipBuild { get; set; }
+        public bool DockerDevContainer { get; set; }
+        public string DockerDevSourcePath { get; set; }
     }
 }

@@ -8,6 +8,7 @@ namespace DevMark.Model
     {
         public TestRun()
         {
+            SysInfo = new SysInfo();
             TestSuites = new List<TestSuite>();
             Verification = new TestRunHash();
         }

@@ -30,4 +30,10 @@
     <None Include="..\DevMark\TestSuites\Echo.yaml" Link="TestSuites\Echo.yaml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Containers\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

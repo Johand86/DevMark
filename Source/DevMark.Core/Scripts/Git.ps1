@@ -22,7 +22,7 @@ function RunGitClean() {
 
 		$output = Invoke-Expression "git clean -ffdx *>&1"
 		if ($trace) {
-			Write $output
+			echo $output
 		}
 
 			if ($output -ne $null) {
@@ -71,6 +71,7 @@ else {
 		if ($clean) {
 			RunGitClean
 		}
+
 		$output = InvokeExpression "git checkout '$branch'" -PrintInfoOutput:$trace -PrintErrorOutput:$true
 	}
 	else {
@@ -78,7 +79,7 @@ else {
 		if ($recursive) {
 			$recStr = "--recursive"
 		}
-		$output = InvokeExpression "git clone $recStr -v '$repository' --branch '$branch' --depth 1 .\" -PrintInfoOutput:$trace -PrintErrorOutput:$true
+		$output = InvokeExpression "git clone $recStr -v '$repository' --branch '$branch' --depth 1 '$($pwd.Path)'" -PrintInfoOutput:$trace -PrintErrorOutput:$true
 	}
 }
 

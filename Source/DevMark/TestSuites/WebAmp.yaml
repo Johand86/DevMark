@@ -4,6 +4,19 @@ version: "1.4.2"
 description: "Benchmark how well your hardware performs when building and testing WebAmp 1.4.2."
 author: "WebAmp is a reimplementation of the classic MP3 player, built using TypeScript. Released under the MIT license by Jordan Eldredge, https://github.com/captbaritone/webamp."
 
+environment:
+  - host:
+      platform: Windows
+      supported: true
+  - container:
+      platform: Windows
+      image:
+        dockerfile: DevMarkWin.Dockerfile
+  - container:
+      platform: Linux
+      image:
+        dockerfile: DevMarkLinux.Dockerfile
+
 dependencies:
   - git: 
       minVersion: "2.0"

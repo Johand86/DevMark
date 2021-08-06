@@ -15,10 +15,17 @@ namespace DevMark.Core.SysIdle
         {
             _workerThread = new Thread(() =>
             {
-                while (true)
+                try
                 {
-                    Thread.Sleep(15000);
-                    SetThreadExecutionState(EXECUTION_STATE.ES_DISPLAY_REQUIRED | EXECUTION_STATE.ES_SYSTEM_REQUIRED);
+                    while (true)
+                    {
+                        Thread.Sleep(15000);
+                        SetThreadExecutionState(EXECUTION_STATE.ES_DISPLAY_REQUIRED | EXECUTION_STATE.ES_SYSTEM_REQUIRED);
+                    }
+                }
+                catch (ThreadInterruptedException)
+                {
+
                 }
             });
             _workerThread.Start();

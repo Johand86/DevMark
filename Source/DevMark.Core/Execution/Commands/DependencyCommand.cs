@@ -80,7 +80,7 @@ namespace DevMark
             {
                 parameters.Add("MinVersion", vs.MinVersion);
                 parameters.Add("MaxVersion", vs.MaxVersion);
-                parameters.Add("RequiredComponents", vs.Components);
+                parameters.Add("RequiredComponentSets", vs.ComponentSets);
             }
 
             var git = cmd.Git;

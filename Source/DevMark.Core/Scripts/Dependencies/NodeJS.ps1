@@ -85,7 +85,16 @@ if (!$checkFailed) {
 			}
 		}
 
+		$externallyRegisteredModules = @("yarn")
+
 		foreach ($module in $npm.GlobalModules) {
+
+			if ($externallyRegisteredModules.Contains($module.name) -and !$globalModules[$module.name]) {
+
+				$globalCmdVersion = & (Get-Command $module.name).Path -version
+				$globalModules[$module.name] = $globalCmdVersion.ToString()
+
+			}
 			
 			$suggestedInstallString = $module.name + (GetSuggestedVersionString -min $module.MinVersion -max $module.MaxVersion)
 
@@ -110,40 +119,68 @@ if (!$checkFailed) {
 	}
 }
 
+
 if ($nativeCppModules) {
 
-	$components = [System.Collections.ArrayList]@()
-	$components.Add("Microsoft.VisualStudio.Component.Roslyn.Compiler") | Out-Null
-	$components.Add("Microsoft.Component.MSBuild") | Out-Null
-    $components.Add("Microsoft.VisualStudio.Component.VC.Tools.x86.x64") | Out-Null
+	if ($IsLinux) {
+	
+		if (!(get-command gcc)) {
+			Write-Warning "Failed to find gcc for Native NodeJS modules."
+			$checkFailed = $true
+		}
 
-	# Other components installed by the NodeJS tool, might be required for some packages?
-	# The nodejs installer adds the CVTools workload for VS2017 Build Tools. Not an ideal check since it's not available in any of the full VS versions.
-	#$components.Add("Microsoft.VisualStudio.Workload.VCTools")
-	#$components.Add("Microsoft.VisualStudio.Component.CoreBuildTools")
-    #$components.Add("Microsoft.VisualStudio.Workload.MSBuildTools")
-    #$components.Add("Microsoft.VisualStudio.Component.Windows10SDK")
-    #$components.Add("Microsoft.VisualStudio.Component.VC.CoreBuildTools")
-    #$components.Add("Microsoft.VisualStudio.Component.Static.Analysis.Tools")
-    #$components.Add("Microsoft.VisualStudio.Component.VC.Redist.14.Latest")
-    #$components.Add("Microsoft.VisualStudio.Component.Windows10SDK.17763")
-    #$components.Add("Microsoft.VisualStudio.Component.VC.CMake.Project")
-    #$components.Add("Microsoft.VisualStudio.Component.TestTools.BuildTools")
-    
-	$vsDeps = VisualStudio -workDir $workDir -requiredComponents $components -printInstallInstructions $false
-
-	# We require a Windows SDK but vswhere doesnt support querying for any, so we cant use it to check that dependency.
-	$winSdk = Get-Item "hklm:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" -ErrorAction:SilentlyContinue
-	if ($winSdk -eq $null) {
-		Write-Warning "Failed to find Windows 10 SDK (this script currently do not check for older SDKs). A Windows SDK is required for native NodeJS modules. Run install_tools.bat from the nodejs folder to install it."
-		$checkFailed = $true
+		if (!(get-command make)) {
+			Write-Warning "Failed to find make for Native NodeJS modules."
+			$checkFailed = $true
+		}
 	}
+	else {
 
-	if ($vsDeps.ExitCode -ne 0) {
-		Write-Warning "Visual Studio with the required components for native NodeJS modules could not be found. Run install_tools.bat from the nodejs install folder to add them."
-		Write-Warning "You could also add the following components to an existing installation: Microsoft.VisualStudio.Component.Roslyn.Compiler, Microsoft.Component.MSBuild, Microsoft.VisualStudio.Component.VC.Tools.x86.x64. Microsoft.VisualStudio.Component.Windows10SDK.<version>"
-		Write-Warning "A list of component names with their IDs can be found here: https://docs.microsoft.com/en-us/visualstudio/install/workload-and-component-ids?view=vs-2019"
-		$checkFailed = $true
+		$componentSets = [System.Collections.ArrayList]@()
+
+		$components = [System.Collections.ArrayList]@()
+		#$components.Add("Microsoft.VisualStudio.Workload.NativeDesktop") | Out-Null # This might be required depending on native NPM module?
+		$components.Add("Microsoft.VisualStudio.Component.Roslyn.Compiler") | Out-Null
+		$components.Add("Microsoft.Component.MSBuild") | Out-Null
+		$components.Add("Microsoft.VisualStudio.Component.VC.Tools.x86.x64") | Out-Null
+
+		$componentSets.Add([pscustomobject]@{ Components = $components }) | Out-Null
+
+		$buildToolComponents = [System.Collections.ArrayList]@()
+		$buildToolComponents.Add("Microsoft.VisualStudio.Workload.VCTools") | Out-Null
+		$buildToolComponents.Add("Microsoft.VisualStudio.Workload.MSBuildTools") | Out-Null
+		$buildToolComponents.Add("Microsoft.VisualStudio.Component.VC.Tools.x86.x64") | Out-Null
+	
+		$componentSets.Add([pscustomobject]@{ Components = $buildToolComponents }) | Out-Null
+
+		# Other components installed by the NodeJS tool, might be required for some packages?
+		# The nodejs installer adds the CVTools workload for VS2017 Build Tools.
+		#$components.Add("Microsoft.VisualStudio.Workload.VCTools")
+		#$components.Add("Microsoft.VisualStudio.Component.CoreBuildTools")
+		#$components.Add("Microsoft.VisualStudio.Workload.MSBuildTools")
+		#$components.Add("Microsoft.VisualStudio.Component.Windows10SDK")
+		#$components.Add("Microsoft.VisualStudio.Component.VC.CoreBuildTools")
+		#$components.Add("Microsoft.VisualStudio.Component.Static.Analysis.Tools")
+		#$components.Add("Microsoft.VisualStudio.Component.VC.Redist.14.Latest")
+		#$components.Add("Microsoft.VisualStudio.Component.Windows10SDK.17763")
+		#$components.Add("Microsoft.VisualStudio.Component.VC.CMake.Project")
+		#$components.Add("Microsoft.VisualStudio.Component.TestTools.BuildTools")
+    
+		$vsDeps = VisualStudio -workDir $workDir -requiredComponents $componentSets -printInstallInstructions $false
+
+		# We require a Windows SDK but vswhere doesnt support querying for any, so we cant use it to check that dependency.
+		$winSdk = Get-Item "hklm:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" -ErrorAction:SilentlyContinue
+		if ($winSdk -eq $null) {
+			Write-Warning "Failed to find Windows 10 SDK (this script currently do not check for older SDKs). A Windows SDK is required for native NodeJS modules. Run install_tools.bat from the nodejs folder to install it."
+			$checkFailed = $true
+		}
+
+		if ($vsDeps.ExitCode -ne 0) {
+			Write-Warning "Visual Studio with the required components for native NodeJS modules could not be found. Run install_tools.bat from the nodejs install folder to add them."
+			Write-Warning "You could also add the following components to an existing installation: Microsoft.VisualStudio.Component.Roslyn.Compiler, Microsoft.Component.MSBuild, Microsoft.VisualStudio.Component.VC.Tools.x86.x64, Microsoft.VisualStudio.Component.Windows10SDK.<version>, Microsoft.VisualStudio.Workload.NativeDesktop (or Microsoft.VisualStudio.Workload.VCTools for build tools VS edition)."
+			Write-Warning "A list of component names with their IDs can be found here: https://docs.microsoft.com/en-us/visualstudio/install/workload-and-component-ids?view=vs-2019"
+			$checkFailed = $true
+		}
 	}
 }
 
@@ -154,6 +191,15 @@ if ($nativePythonModules) {
 		
 		$version = $pythonCommand.Version
 		$v = $version.ToString()
+
+		if ($IsLinux) {
+			$v = python -V 2>&1
+			
+			if ($v -ne $null -and $v.ToString().Contains(" ")) {
+				$v = $v.ToString().Split(' ')[1]
+			}
+		}
+
 		if ($v -ne "0.0.0.0") { # 0.0.0.0 = Shortcut to the Windows store version of Python!
 			$depVersions["Python"] = $v
 			$pythonFound = $true

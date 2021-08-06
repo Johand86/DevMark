@@ -13,5 +13,6 @@
 
         public static CommandLineResult Help => new CommandLineResult(showHelp: true, message: null);
         public static CommandLineResult Success => new CommandLineResult(showHelp: false, message: null);
+        public static CommandLineResult None => new CommandLineResult(showHelp: false, message: null);
     }
 }

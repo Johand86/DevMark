@@ -4,13 +4,24 @@ version: "5.0.5"
 description: "Benchmark how well your hardware performs when building Entity Framework Core v5.0.5"
 author: "EF Core is maintained by Microsoft and released under the Apache license. See https://github.com/dotnet/efcore for more info."
 
+environment:
+  - host:
+      platform: Windows
+      supported: true
+  - container:
+      platform: Windows
+      image:
+        dockerfile: DevMarkWin.Dockerfile
+  - container:
+      platform: Linux
+      image:
+        dockerfile: DevMarkLinux.Dockerfile
+
 dependencies:
   - git: 
       minVersion: "2.0"
   - path:
       requiredLength: 146
-  - dotnetFramework:
-      minVersion: "4.6.1" # Not sure if this is needed, but ef.csproj targets netcoreapp2.0;net461.
   - dotnet: 
       minVersion: "5.0"
 
@@ -21,8 +32,13 @@ initializers:
       branch: "v5.0.5"
       clean: true
   - shell:
+      platform: Windows 
       name: "Restore environment"
       cmd: ".\\eng\\common\\build.ps1 -restore -build -verbosity q -configuration Release -msbuildEngine dotnet"
+  - shell:
+      platform: Linux
+      name: "Restore environment"
+      cmd: "./eng/common/build.sh --restore --build --configuration Release"  # ps1 command crashes on Linux while installing dotnet SDK, so we'll have to use .sh for now. 
 
 tests:
   - name: "build"
@@ -33,7 +49,7 @@ tests:
     benchmark:
       - shell:
           name: "BUILD"
-          cmd: ".\\eng\\common\\build.ps1 -rebuild -verbosity q -configuration Release -msbuildEngine dotnet"
+          cmd: ".\\eng\\common\\build.ps1 -rebuild -configuration Release -verbosity q -msbuildEngine dotnet"
 
 cleanup:
   - process:

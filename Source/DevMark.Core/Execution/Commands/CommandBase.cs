@@ -35,7 +35,7 @@ namespace DevMark
 
             if (Int64.TryParse(TryGetReturnValue("Duration"), out long duration))
             {
-                Duration = TimeSpan.FromTicks(duration);
+                Duration = TimeSpan.FromMilliseconds(duration);
             }
 
             var returnValueInPipeline = Pipeline.LastOrDefault() as Hashtable;

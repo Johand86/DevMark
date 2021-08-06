@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace DevMark.Core.Engine
@@ -102,6 +103,7 @@ namespace DevMark.Core.Engine
                     bool warmupFailed = false;
                     for (int i = 0; i < test.WarmupIterations; i++)
                     {
+                        Thread.Sleep(test.InitializationDelay);
                         if (!RunTest(executer, results, data, test, BenchmarkScope.BenchmarkWarmup, i))
                         {
                             warmupFailed = true;
@@ -198,6 +200,9 @@ namespace DevMark.Core.Engine
 
         private bool ExecteCommand(TestSuiteConfiguration suiteConfiguration, ScriptExecuter executer, BenchmarkEngineExecutionResult results, TestConfiguration testConfiguration, CommandConfigurationBase configuration, BenchmarkScope scope, int scopeIndex = 0)
         {
+            if (!IsSupportedPlatform(configuration))
+                return true;
+
             var command = _commandFactory.CreateFromConfiguration(suiteConfiguration, null, configuration, new CommandEngineConfiguration { TraceLogging = TraceLogging });
             try
             {
@@ -232,6 +237,32 @@ namespace DevMark.Core.Engine
 
             results.Add(new BenchmarkResult { Command = command, SuiteConfig = suiteConfiguration, TestConfig = testConfiguration, CommandConfiguration = configuration, Scope = scope, ScopeIndex = scopeIndex });
             return command.Successfull;
+        }
+
+        private bool IsSupportedPlatform(CommandConfigurationBase configuration)
+        {
+            var cfg = configuration as CommandConfiguration;
+
+            if (cfg == null)
+                return true;
+
+            var command = cfg.Git ?? cfg.Process ?? cfg.Shell ?? cfg.Write as BaseCommandConfiguration;
+
+            if (command == null || command.Platform.HasValue == false || command.Platform == PlatformConfiguration.Any)
+                return true;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return command.Platform == PlatformConfiguration.Windows;
+            }
+
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return command.Platform == PlatformConfiguration.Linux;
+            }
+
+            return false;
         }
 
         private void Command_StreamDataAdded(object sender, StreamObject e)

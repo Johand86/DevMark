@@ -1,4 +1,4 @@
-﻿Param([Parameter(Mandatory=$true)][string]$workDir, [string]$minVersion, [string]$maxVersion, $requiredComponents = $null, [boolean]$trace = $false)
+﻿Param([Parameter(Mandatory=$true)][string]$workDir, [string]$minVersion, [string]$maxVersion, [boolean]$trace = $false)
 
 ##<CommandFunctions.ps1>##
 $global:LASTEXITCODE = 0
@@ -11,11 +11,20 @@ $envPaths = @{}
 
 if ($command -ne $null) {
 
-	$compatibleVersion = CompatibleVersion -version $command.Version -min $minVersion -max $maxVersion
+	$version = $command.Version.ToString()
+	if ($version -eq "0.0.0.0") {
+
+		# Version is not set in unix. We can try to resolve by invoking.
+		$versionString = git --version
+		$expr = new-Object System.Text.RegularExpressions.Regex("(\d\.?)(\d\.?)?(\d\.?)?(\d\.?)?")
+		$version = $expr.Match($versionString).Value
+	}
+
+	$compatibleVersion = CompatibleVersion -version $version -min $minVersion -max $maxVersion
 
 	if ($compatibleVersion) {
 		$envPaths.git = $command.Path
-		$depVersions["git"] = $command.Version.ToString()
+		$depVersions["git"] = $version
 	}
 } 
 
