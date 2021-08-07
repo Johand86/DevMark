@@ -121,6 +121,15 @@ namespace DevMark
             var currentContainerInfo = testRun.SysInfo?.Containers ?? new List<ContainerInfo>();
             sysInfo.Containers.AddRange(currentContainerInfo);
 
+            if (sysInfo.Containers.Count != 0)
+            {
+                var wdDisk = sysInfo.Disks.FirstOrDefault(x => x.ContainsWorkDirectory == true);
+                if (wdDisk != null)
+                {
+                    wdDisk.ContainsWorkDirectory = false; // We could check the docker configuration, but for now we dont set a work directory.
+                }
+            }
+
             testRun.SysInfo = sysInfo;
             testRun.Verification.SysInfo = _hashCalculator.Calculate(sysInfo);
         }

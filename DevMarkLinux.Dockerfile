@@ -13,7 +13,7 @@ RUN apt install -y curl git nodejs yarn gcc g++ make
 
 FROM installer AS config
         
-RUN dotnet tool install --tool-path /DevMark --version 1.0.0 DevMark
+RUN dotnet tool install --tool-path /DevMark --version 1.1.1 DevMark
 
 FROM config AS final
 

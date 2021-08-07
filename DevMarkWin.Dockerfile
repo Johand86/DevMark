@@ -55,7 +55,7 @@ FROM dependencies AS config
         
 SHELL ["cmd", "/S", "/C"]
 
-RUN dotnet tool install --tool-path C:\\DevMark\\ --version 1.0.0 DevMark
+RUN dotnet tool install --tool-path C:\\DevMark\\ --version 1.1.1 DevMark
 
 FROM config AS final
 

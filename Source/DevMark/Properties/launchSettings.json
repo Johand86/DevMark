@@ -2,7 +2,7 @@
   "profiles": {
     "DevMark": {
       "commandName": "Project",
-      "commandLineArgs": "run Echo --docker --dockerfile DevMarkLinuxDevelopment.Dockerfile --docker-dev-container --docker-dev-source-path \"C:\\Johan\\Repos\\DevMark\" -w X:\\DM2 --docker-wait"
+      "commandLineArgs": "run Echo --docker --dockerfile DevMarkLinuxDevelopment.Dockerfile --docker-dev-container --docker-dev-source-path \"C:\\Johan\\Repos\\DevMark\" -w X:\\DM2"
     },
     "Docker": {
       "commandName": "Docker",
