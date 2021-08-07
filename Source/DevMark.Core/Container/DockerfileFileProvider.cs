@@ -19,7 +19,14 @@ namespace DevMark.Core.Container
             if (File.Exists(dockerfile))
                 return Path.GetFullPath(dockerfile);
 
-            return Path.GetFullPath(Path.Combine("Containers", dockerfile));
+            return Path.Combine(GetDefaultPath(), dockerfile);
+        }
+
+        private string GetDefaultPath()
+        {
+            string exeLocation = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string containerLocation = Path.Combine(exeLocation, "Containers");
+            return containerLocation;
         }
     }
 }

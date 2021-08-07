@@ -132,7 +132,7 @@ namespace DevMark.CommandLine
             var o = _console.Out;
             o.WriteLine();
             o.WriteLine("Please consider uploading your result to our database using the following command: ");
-            o.WriteLine($"devmark.exe upload --result \"{resultPath}\" --api-key <YourApiKey>.");
+            o.WriteLine($"devmark.exe upload \"{resultPath}\" --api-key <YourApiKey>");
             o.WriteLine($"At \"{DependencyConfigurator.DefaultServiceUrl}\" you can get your API key, as well as browse and compare your results with others. ");
         }
 

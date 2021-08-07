@@ -15,9 +15,9 @@
     <PackageProjectUrl>https://www.devbenchmark.com/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Johand86/DevMark</RepositoryUrl>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.1.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
